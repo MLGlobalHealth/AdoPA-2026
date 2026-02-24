@@ -38,11 +38,9 @@ All output is written to `results/` (created at runtime):
 
 | File | Contents |
 |------|----------|
-| `predictions_<timestamp>.csv` | Posterior means and 95% CIs for all countries × ages × years × sex |
-| `mcmc_draws_<timestamp>_all_countries.csv` | Full per-draw probability matrix (all 8 PA categories) |
-| `ppc_<timestamp>.csv` | Posterior predictive check data |
-| `diagnostics_Boys_<timestamp>.csv` | R-hat and convergence diagnostics (boys model) |
-| `diagnostics_Girls_<timestamp>.csv` | R-hat and convergence diagnostics (girls model) |
+| `predictions_<model>_<timestamp>.csv` | Posterior means and 95% CIs for all countries × ages × years × sex |
+| `mcmc_draws_<model>_<timestamp>_all_countries.csv` | Full per-draw probability matrix (all 8 PA categories) |
+| `ppc_<model>_<timestamp>.csv` | Posterior predictive check data |
 
 ## Model
 
