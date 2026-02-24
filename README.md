@@ -39,7 +39,7 @@ All output is written to `results/` (created at runtime):
 | File | Contents |
 |------|----------|
 | `predictions_<model>_<timestamp>.csv` | Posterior means and 95% CIs for all countries × ages × years × sex |
-| `mcmc_draws_<model>_<timestamp>_all_countries.csv` | Full per-draw probability matrix (all 8 PA categories) |
+| `mcmc_draws_<model>_<timestamp>_all_countries.csv` | Full per-draw probability matrix (all 8 physical activity categories) |
 | `ppc_<model>_<timestamp>.csv` | Posterior predictive check data |
 
 ## Model
