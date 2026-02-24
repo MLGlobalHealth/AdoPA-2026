@@ -1,0 +1,12 @@
+# R
+.Rhistory
+.RData
+.Rproj.user/
+
+# Stan compiled model cache (rstan auto-writes these)
+*.rds
+*.so
+*.dll
+
+# Logs
+*.log
