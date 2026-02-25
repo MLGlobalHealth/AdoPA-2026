@@ -32,6 +32,8 @@ This script:
 4. Extracts predictions for all in-sample countries and out-of-sample countries
 5. Writes results to `results/`
 
+_Note that the runtime is 10+ hours!_
+
 ## Output
 
 All output is written to `results/` (created at runtime):
