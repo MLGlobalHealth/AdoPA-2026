@@ -15,6 +15,7 @@
 ################################################################################
 
 options(stringsAsFactors = FALSE)
+set.seed(42)
 
 library(rstan)
 library(data.table)
@@ -30,9 +31,9 @@ config <- list(
   name       = "model",
   stan_file  = "model.stan",
   chains     = 4,
-  iter       = 1000,
-  warmup     = 500,
-  thin       = 2,
+  iter       = 400,
+  warmup     = 200,
+  thin       = 1,
   control    = list(adapt_delta = 0.9, max_treedepth = 15),
   seed       = 42
 )
@@ -171,7 +172,7 @@ cat("Running on ALL countries. Total countries:", length(unique(df_clean$iso3)),
 
 create_aggregated_ordinal_data <- function(df_subset) {
   core_vars <- c("age_centered", "year_scaled", "adopa_region", "iso3",
-                 "national", "regional", "survey", "sdi",
+                 "survey", "sdi",
                  "oosrate", "probitobesity", "low_school_attendance", "veh_per_cap")
   long_data <- df_subset %>%
     select(any_of(core_vars), starts_with("count_day")) %>%
@@ -224,16 +225,14 @@ prepare_custom_stan_data <- function(data, sex_label, config) {
     prior_only = 0L
   )
 
-  # Survey groupings (survey:national combinations)
+  # Survey groupings (one group per unique survey ID)
   survey_groups <- data %>%
-    mutate(survey_national = paste(survey, national, sep = ":")) %>%
-    select(survey_national) %>%
+    select(survey) %>%
     distinct() %>%
     mutate(survey_group_idx = row_number())
 
   data_with_groups <- data %>%
-    mutate(survey_national = paste(survey, national, sep = ":")) %>%
-    left_join(survey_groups, by = "survey_national")
+    left_join(survey_groups, by = "survey")
 
   X_region_matrix <- cbind(data$age_centered, data$year_scaled)
 
