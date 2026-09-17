@@ -1,8 +1,3 @@
-// Variant of inflate_extremes_country_slopes.stan
-// Goal: new-country predictions that mimic brms `sample_new_levels` behavior
-//       by drawing one random-effect vector per NEW iso3 per posterior draw,
-//       and reusing it for all age-year cells of that iso3 in that draw.
-
 functions {
   real ordered_logistic_hierarchical_lpmf(int y, real mu, vector thres) {
     return ordered_logistic_lpmf(y | mu, thres);
@@ -34,7 +29,7 @@ data {
   int<lower=1> nsurvey_groups;  // number of unique survey:national combinations
   array[N] int<lower=1, upper=nsurvey_groups> survey_group;  // survey group index
 
-  // Trend prediction grid data (same structure as slopes model)
+  // Trend prediction grid data
   int<lower=0> N_trends;
   matrix[N_trends, K] X_trends;
   matrix[N_trends, K_region] X_region_trends;
@@ -43,8 +38,6 @@ data {
   array[N_trends] int<lower=1, upper=nsurvey_groups> survey_group_trends;
 
   // Prediction data for new countries
-  // NOTE: This variant introduces explicit new-country indexing so that
-  //       we can share one RE draw per new iso3 within each posterior draw.
   int<lower=0> N_new;
   matrix[N_new, K] X_new;
   matrix[N_new, K_region] X_region_new;
@@ -52,10 +45,8 @@ data {
   array[N_new] int<lower=1, upper=nsurvey_groups> survey_group_new;
   int<lower=0, upper=1> sample_new_levels;
 
-  // Number of distinct NEW countries (iso3) represented in the N_new grid
-  // and a mapping from each grid row to its new-country id.
-  // These should be constructed in R so that all rows for a given new iso3
-  // share the same new_country_id, matching brms' per-level behavior.
+  // Number of distinct new countries (iso3) represented in the N_new grid and a mapping from each grid row to its new-country id.
+  // These should be constructed in R so that all rows for a given new iso3 share the same new_country_id, matching brms' per-level behavior.
   int<lower=0> N_new_countries;
   array[N_new] int<lower=1> new_country_id;
   array[N_new_countries] int<lower=1, upper=nregions> new_country_region;
@@ -70,25 +61,25 @@ parameters {
   // Regional threshold baselines
   array[nregions] ordered[nthres] region_thresholds;
 
-  // Country extreme category inflation parameters
-  vector[ncountries] country_inflate_cat0;  // positive = make category 0 more likely
-  vector[ncountries] country_inflate_cat7;  // positive = make category 7 more likely
+  // Country extreme category inflation parameters: positive values make the category more likely
+  vector[ncountries] country_inflate_cat0;
+  vector[ncountries] country_inflate_cat7;
 
   // Hierarchical variance for country inflation effects
   real<lower=0> sigma_country_inflate_cat0;
   real<lower=0> sigma_country_inflate_cat7;
 
-  // Region random slopes (-1 + age_centered + year_scaled | adopa_region)
+  // Region random slopes, i.e.: (-1 + age_centered + year_scaled | adopa_region)
   vector<lower=0>[K_region] sigma_region_slopes;
   cholesky_factor_corr[K_region] L_region_slopes;
   matrix[nregions, K_region] z_region_slopes;
 
-  // Country random effects (intercept + year slope | iso3)
+  // Country random effects, i.e.: (intercept + year slope | iso3)
   vector<lower=0>[2] sigma_country_re;
   cholesky_factor_corr[2] L_country_re;
   matrix[ncountries, 2] z_country_re;
 
-  // Survey random intercepts grouped by national (1 | gr(survey, by = national))
+  // Survey random intercepts grouped by national, i.e.: (1 | gr(survey, by = national))
   real<lower=0> sigma_survey;
   vector[nsurvey_groups] z_survey;
 }
@@ -221,9 +212,7 @@ generated quantities {
   array[N_trends] vector[8] trend_category_probs;
   vector[N_trends] trend_expected_days;
 
-  // New-country predictions
-  // new_category_probs: per-draw probability distribution for each N_new point
-  // y_pred_new: categorical draw (1..8) for compatibility with existing code
+  // New country predictions
   array[N_new] vector[8] new_category_probs;
   vector[N_new] y_pred_new;
 
@@ -247,7 +236,7 @@ generated quantities {
     b_survey_intercepts[sg] = survey_intercepts[sg];
   }
 
-  // Trend predictions (same as slopes model, excluding survey effects)
+  // Trend predictions
   if (N_trends > 0) {
     for (n in 1:N_trends) {
       real mu_trend = dot_product(X_trends[n, ], b) +
@@ -279,7 +268,7 @@ generated quantities {
     }
   }
 
-  // New-country predictions with per-iso3 random effects (brms-like)
+  // New country predictions with per iso3 random effects
   if (N_new > 0) {
     // Per-new-country random effects, drawn once per posterior draw
     array[N_new_countries] vector[nthres] new_country_thresholds;
