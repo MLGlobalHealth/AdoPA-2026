@@ -116,42 +116,23 @@ transformed parameters {
   for (c in 1:ncountries) {
     int r = country_to_region[c];
 
-    // Step 1: Calculate new extreme thresholds
+    // Shift the first cutpoint up by the category-0 inflation and the last down
+    // by the category-7 inflation, then place the interior cutpoints at the same
+    // proportions of the span as the region's. Strictly increasing whenever the
+    // span is positive; the minimum-range and minimum-spacing clamps that used
+    // to guard this have been removed.
     real new_first_threshold = region_thresholds[r][1] + country_inflate_cat0[c];
     real new_last_threshold = region_thresholds[r][nthres] - country_inflate_cat7[c];
-
-    // Step 2: Calculate new range
     real new_range = new_last_threshold - new_first_threshold;
 
-    // Step 3: Ensure minimum range for identifiability
-    real min_total_range = 1.0;
-    real min_spacing = 0.1;
-
-    if (new_range < min_total_range) {
-      real expansion_needed = (min_total_range - new_range) * 0.5;
-      new_first_threshold -= expansion_needed;
-      new_last_threshold += expansion_needed;
-      new_range = min_total_range;
-    }
-
-    // Step 4: Set extreme thresholds
     country_thresholds[c][1] = new_first_threshold;
     country_thresholds[c][nthres] = new_last_threshold;
 
-    // Step 5: Interpolate middle thresholds proportionally
     if (nthres > 2) {
       real regional_range = region_thresholds[r][nthres] - region_thresholds[r][1];
-
       for (t in 2:(nthres - 1)) {
         real regional_prop = (region_thresholds[r][t] - region_thresholds[r][1]) / regional_range;
-        real proposed_threshold = new_first_threshold + regional_prop * new_range;
-        country_thresholds[c][t] = fmax(proposed_threshold,
-                                        country_thresholds[c][t - 1] + min_spacing);
-      }
-
-      for (t in 2:nthres) {
-        country_thresholds[c][t] = fmax(country_thresholds[c][t],
-                                        country_thresholds[c][t - 1] + min_spacing);
+        country_thresholds[c][t] = new_first_threshold + regional_prop * new_range;
       }
     }
   }
@@ -286,7 +267,7 @@ generated quantities {
         // Build thresholds for this new country (corrected algorithm)
         real new_first = region_thresholds[r][1] + new_inflate_cat0;
         real new_last = region_thresholds[r][nthres] - new_inflate_cat7;
-        real new_range = fmax(new_last - new_first, 0.1);
+        real new_range = new_last - new_first;
 
         new_country_thresholds[c_new][1] = new_first;
         new_country_thresholds[c_new][nthres] = new_first + new_range;
