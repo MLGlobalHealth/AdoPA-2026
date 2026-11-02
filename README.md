@@ -1,6 +1,6 @@
 # AdoPA: Adolescent Physical Activity — Hierarchical Ordinal Model
 
-Replication code for [tbc]
+Replication code for Strain T, Flaxman SR, Ricardo LIC, et al, and the Country Data Author Group. National, regional, and global trends in adolescent physical activity from 2010 to 2025: a pooled analysis of 389 surveys with 3·2 million participants from 140 countries. Lancet Glob Health 2026; published online 4 November 2026. https://doi.org/10.1016/j.langlo.2026.104099 
 
 ## Overview
 
