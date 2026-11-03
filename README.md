@@ -28,11 +28,11 @@ Rscript fit.r
 This script:
 1. Loads and prepares the data
 2. Compiles the Stan model `model.stan` 
-3. Fits separate models for boys and girls (4 chains × 500 post-warmup iterations, thinned by 2)
+3. Fits separate models for boys and girls
 4. Extracts predictions for all in-sample countries and out-of-sample countries
 5. Writes results to `results/`
 
-_Note that the runtime is 10+ hours!_
+`fit.r` is configured to run in a few hours with 4 chains and 400 iterations. The published estimates were produced with 8 chains, 4000 iterations, and thinned by a factor of 4.
 
 ## Output
 
