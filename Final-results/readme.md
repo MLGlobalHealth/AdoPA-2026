@@ -1,1 +1,1 @@
-The final model estimates plus population weighted summary statistics, projections and target assessments for all countries, regions, sexes and ages. Codebook describes the csvs.
+Complete estimates by country, age, and sex, as well as regional, both-sexes, and all-ages aggregates. Codebook describes the csvs.
