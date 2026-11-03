@@ -32,7 +32,7 @@ This script:
 4. Extracts predictions for all in-sample countries and out-of-sample countries
 5. Writes results to `results/`
 
-`fit.r` is configured to run in a few hours with 4 chains and 400 iterations. The published estimates were produced with 8 chains, 4000 iterations, and thinned by a factor of 4.
+`fit.r` is configured to run in about 12 hours with 4 chains and 400 iterations. The published estimates were produced with 8 chains, 4000 iterations, and thinned by a factor of 4.
 
 ## Output
 
