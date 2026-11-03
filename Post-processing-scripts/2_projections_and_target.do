@@ -17,7 +17,7 @@
    moderate-to-vigorous physical activity on every day of the week, that is, who
    report fewer than 7 active days per week. The 2010 estimate is the baseline.
 
- METHOD (carried out separately for each of the 4000 posterior draws, so that the
+ METHOD (carried out separately for each posterior draw, so that the
  uncertainty in the model carries through to the projection)
    1. Take the percentage reporting fewer than 7 active days (1 minus the
       prevalence of 7 active days) for each year 2010-2025 and convert it to a
@@ -66,10 +66,12 @@
    All percentages are proportions between 0 and 1.
 
  REQUIREMENTS
-   - Stata/MP. About 16,000 variables are held in memory at the peak (the 4000
-     draws of the input, plus 4000 projections, 4000 slopes and 4000 indicators
-     of meeting the target), and the code sets "set maxvar 40000".
-   - The run is slow because it fits millions of regressions (4000 draws x 3 sexes
+   - About 4 x (number of draws) variables are held in memory at the peak (the
+     draws of the input, plus one projection, one slope and one indicator of
+     meeting the target per draw). With the 4000 draws of the published run this
+     is about 16,000 and needs Stata/MP; with fit.r's default 800 draws Stata/SE
+     suffices.
+   - The run is slow because it fits millions of regressions (draws x 3 sexes
      x about 200 locations).
 
  HOW TO RUN
@@ -85,11 +87,12 @@ clear
 clear matrix
 clear mata
 
-* about 16,000 variables are held in memory at the peak (see the header)
-set maxvar 40000
+* about 4 x draws variables are held in memory at the peak (see the header);
+* set maxvar 40000 needs Stata/MP, fall back to the Stata/SE maximum otherwise
+capture set maxvar 40000
+if _rc capture set maxvar 32767
 
-* number of posterior draws per variable in the input file
-local draws = 4000
+* the number of posterior draws per variable is read from the input file after loading
 
 * years: the baseline year of the target, the last year with estimates, and the
 * year of the target (projection year)
@@ -112,6 +115,11 @@ if _rc {
 
 * ---- 1. load the draws -------------------------------------------------------------
 use "$dir/country_globe_region_all_ages_draws.dta", clear
+
+* number of posterior draws per variable: one days7_prob_<d> column per draw
+unab drawvars : days7_prob_*
+local draws : word count `drawvars'
+display "Posterior draws per variable: `draws'"
 
 * project using only the years with estimates (2010 to 2025)
 drop if year > `estyear' | year < `baseyear'

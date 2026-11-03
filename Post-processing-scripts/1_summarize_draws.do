@@ -26,15 +26,17 @@
    _upr).
 
  INPUTS (all in the same folder as this do-file; see "HOW TO RUN")
-   adopa_mcmc_draws_<model>.csv      Posterior draws from the model, one row per
-                                     iso3 x year x age x sex. Columns: iso3, year,
-                                     age, sex, then 4000 draws each of
-                                     days0_prob_1 ... days7_prob_4000 (probability
-                                     of reporting 0 ... 7 active days) and
-                                     mean_days_1 ... mean_days_4000 (mean active
-                                     days). This file is about 16 GB and is NOT
-                                     included in the repository; it is produced by
-                                     the model-fitting code.
+   mcmc_draws_<model>_all_countries.csv
+                                     Posterior draws from the model, written by
+                                     fit.r to results/. One row per iso3 x year x
+                                     age x sex. Columns: iso3, year, age, sex, then
+                                     one column per posterior draw for each of
+                                     days0_prob ... days7_prob (probability of
+                                     reporting 0 ... 7 active days) and mean_days
+                                     (mean active days), named days0_prob_1,
+                                     days0_prob_2, ... The number of draws is read
+                                     from the file. This file is large and is NOT
+                                     included in the repository.
    countries regions.dta             Lookup of each of the 195 countries (iso3) to its
                                      analysis region (adopa_region), World Bank
                                      income group (wbinc25, 2025 classification;
@@ -56,7 +58,7 @@
    stats_all_ages.dta / .csv         Statistics for all ages 11-17 combined
    country_globe_region_all_ages_draws.dta
                                      Draws of the 7-day prevalence (days7_prob_1 to
-                                     days7_prob_4000) for all ages combined,
+                                     days7_prob_<draws>) for all ages combined,
                                      2010-2025, for countries, regions and the
                                      globe, with the summary statistics. It is the
                                      input to 2_projections_and_target.do.
@@ -68,17 +70,19 @@
    prev_0days ... prev_7days with _lwr/_upr, and publish ("yes"/"no"; see below).
 
  REQUIREMENTS
-   - Stata/MP. The draws file has 36,004 columns, so "set maxvar 40000" is needed,
-     and only Stata/MP allows that many variables.
-   - A lot of memory: the draws file is about 16 GB on disk and is loaded in full.
-   - The run takes a long time because of the loops over 4000 draws.
+   - The draws file has 4 + 9 x (number of draws) columns and is loaded in full.
+     With fit.r's default settings (800 draws) that is 7,204 columns, which runs in
+     Stata/SE or MP. The published run used 4000 draws (36,004 columns, about
+     16 GB), which needs Stata/MP and "set maxvar 40000".
+   - The run takes a long time because of the loops over the draws.
 
  HOW TO RUN
-   1. Put this do-file, the three .dta inputs and the draws .csv in one folder.
+   1. Put this do-file, the three .dta inputs and the draws .csv written by fit.r
+      (results/mcmc_draws_<model>_all_countries.csv) in one folder.
    2. In Stata, set the working directory to that folder, for example:
-          cd "C:/path/to/AdoPA-2026/scripts"
-   3. Run this do-file. Nothing else needs to be edited; the model name and the
-      number of draws are set at the top of the code below.
+          cd "C:/path/to/AdoPA-2026/Post-processing-scripts"
+   3. Set the model name (the <model> part of the draws file name, e.g.
+      model_20260224_0731) at the top of the code below, then run this do-file.
 ==============================================================================*/
 
 * housekeeping --------------------------------------------------------------------
@@ -86,21 +90,23 @@
 tempfile countries globe _adopa_region _wbinc25 _whoreg6 all
 clear
 
-* the draws file has 36,004 columns (4 identifiers + 4000 draws x 9 variables),
-* which is more than Stata's default limit on the number of variables
-set maxvar 40000
+* the draws file has 4 + 9 x draws columns, which can exceed Stata's default limit
+* on the number of variables (set maxvar 40000 needs Stata/MP; fall back to the
+* Stata/SE maximum otherwise)
+capture set maxvar 40000
+if _rc capture set maxvar 32767
 
-* name of the model run (this is part of the draws file name)
-local model = "inflate_extremes_country_uncertainty_xl_20260219_1704"
+* name of the model run: the <model> part of results/mcmc_draws_<model>_all_countries.csv
+* written by fit.r (the model name "model" plus the run timestamp)
+local model = "model_YYYYMMDD_HHMM"
 
-* number of posterior draws per variable in the draws file
-local draws = 4000
+* the number of posterior draws per variable is read from the draws file after loading
 
 * all inputs are read from, and all outputs are written to, the working directory
 global dir "`c(pwd)'"
 
 * check that every input file is present before starting the (long) run
-foreach f in "countries regions.dta" "WPP24.dta" "countries_with_incl_surveys.dta" "adopa_mcmc_draws_`model'.csv" {
+foreach f in "countries regions.dta" "WPP24.dta" "countries_with_incl_surveys.dta" "mcmc_draws_`model'_all_countries.csv" {
 	capture confirm file "$dir/`f'"
 	if _rc {
 		display as error "File not found: $dir/`f'"
@@ -119,7 +125,11 @@ local agetreatments = "by_age all_ages"
 foreach type in `agetreatments' {
 
 	* ---- 1. load the country-level draws and add regions and population ------------
-	import delimited "$dir/adopa_mcmc_draws_`model'.csv", clear
+	import delimited "$dir/mcmc_draws_`model'_all_countries.csv", clear
+
+	* number of posterior draws per variable: 4 identifier columns, then 9 variables per draw
+	local draws = (c(k) - 4) / 9
+	display "Posterior draws per variable: `draws'"
 
 	* add each country's analysis region, WHO region and World Bank income group
 	merge m:1 iso3 using "$dir/countries regions.dta", keep(master match) keepusing(adopa_region wbinc25 whoreg6) nogen
