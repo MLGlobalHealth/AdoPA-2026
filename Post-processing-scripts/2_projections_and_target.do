@@ -151,10 +151,10 @@ forvalues draw = 1/`draws' {
 		foreach geo in `places' {
 			quietly {
 				regress probitprev year if geography == "`geo'" & sex == `sex'
-				* e(b)[1,1] is the slope and e(b)[1,2] the constant. Project to 2030
+				* _b[year] is the slope and _b[_cons] the constant. Project to 2030
 				* and convert the probit back to a percentage.
-				replace pred`endyear'`draw' = normal(e(b)[1,2]+`endyear'*e(b)[1,1]) if geography == "`geo'" & sex == `sex'
-				replace pp_increase`draw' = e(b)[1,1] if geography == "`geo'" & sex == `sex'
+				replace pred`endyear'`draw' = normal(_b[_cons]+`endyear'*_b[year]) if geography == "`geo'" & sex == `sex'
+				replace pp_increase`draw' = _b[year] if geography == "`geo'" & sex == `sex'
 				}
 			}
 		}
