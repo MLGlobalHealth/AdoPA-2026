@@ -1,0 +1,129 @@
+CODEBOOK: WHO adolescent physical activity estimates, 2010-2025
+
+Estimates of physical activity among adolescents aged 11-17 years, by year,
+sex and area, for 195 countries and territories and for global, regional and
+income-group aggregates.
+
+Source: Strain, T, Flaxman SR, Ricardo, LI, Guthold R, et al. National, regional, and global trends in adolescent physical
+activity from 2010 to 2025: a pooled analysis of 389 surveys with 3.2 million participants from 140 countries. Lancet
+Global Health, 2026. DOI: https://doi.org/10.1016/j.langlo.2026.104099
+
+An "active day" is a day with at least 60 minutes of moderate-to-vigorous
+physical activity (MVPA).
+
+
+*******************************************************************************
+WARNING: Country estimates where publish = "no" should NOT be presented or
+reported. These countries have no included survey data. Their estimates are
+provided so that users can calculate estimates for custom groupings of
+countries (see CALCULATING CUSTOM REGIONS below).
+*******************************************************************************
+
+
+FILES
+
+File                              Ages                    Geography              Rows
+--------------------------------  ----------------------  ---------------------  ------
+adopa_ages11to17_countries.csv    11-17 combined          Countries              9,360
+adopa_ages11to17_regions.csv      11-17 combined          Global and regions       912
+adopa_by_age_countries.csv        Each single year 11-17  Countries             65,520
+adopa_by_age_regions.csv          Each single year 11-17  Global and regions     6,384
+
+All files cover the years 2010-2025.
+
+Rows are not additive. Each file contains estimates for boys, girls and both
+sexes combined, and the regions files contain several overlapping types of
+region. Select one value of sex (and one value of regiontype) before
+comparing or combining rows.
+
+
+VARIABLES
+
+Variable         Files      Type     Description                                     Values / units
+---------------  ---------  -------  ----------------------------------------------  -----------------------------
+year             all        integer  Year of estimate                                2010-2025
+regiontype       regions    string   Type of aggregate                               Global, WHO region,
+                                                                                     World Bank income group,
+                                                                                     Analysis region
+region           regions    string   Name of the aggregate                           See REGIONS below
+iso3             countries  string   ISO 3166-1 alpha-3 country code                 195 countries and territories
+country          countries  string   Country or territory name
+who_region       countries  string   WHO region the country belongs to               See REGIONS below
+income_group     countries  string   World Bank income group (2025) the country      See REGIONS below
+                                     belongs to
+analysis_region  countries  string   Analysis region the country belongs to          See REGIONS below
+sex              all        string   Sex                                             Boys, Girls, Both sexes
+age              by_age     integer  Age in completed years                          11-17
+publish          countries  string   Whether the country estimate may be presented.  yes, no
+                                     See WARNING above.
+population       all        numeric  Population (UN World Population Prospects       thousands
+                                     2024). For aggregates, the sum over the
+                                     countries in the aggregate.
+mean_days        all        numeric  Mean number of active days per week             days (0-7)
+mean_days_lwr    all        numeric  Lower bound of 95% uncertainty interval         days
+                                     for mean_days
+mean_days_upr    all        numeric  Upper bound of 95% uncertainty interval         days
+                                     for mean_days
+pct_Xdays        all        numeric  % reporting exactly X active days per week,     % (0-100)
+                                     for X = 0, 1, 2, 3, 4, 5, 6, 7
+pct_Xdays_lwr    all        numeric  Lower bound of 95% uncertainty interval         %
+                                     for pct_Xdays
+pct_Xdays_upr    all        numeric  Upper bound of 95% uncertainty interval         %
+                                     for pct_Xdays
+
+For each row, pct_0days to pct_7days sum to 100.
+
+The 95% uncertainty intervals are the 2.5th and 97.5th percentiles of the
+posterior draws. Mean days are given to 5 decimal places and percentages to
+4 decimal places.
+
+
+REGIONS
+
+regiontype              region
+----------------------  -------------------------------------------
+Global                  Global
+WHO region              African Region
+                        Region of the Americas
+                        South-East Asia Region
+                        European Region
+                        Eastern Mediterranean Region
+                        Western Pacific Region
+World Bank income       Low income
+group                   Lower-middle income
+                        Upper-middle income
+                        High income
+Analysis region         Central and Eastern Europe and Central Asia
+                        East Asia and the Pacific
+                        High-income western
+                        Latin America and the Caribbean
+                        Middle East and north Africa
+                        Oceania
+                        South and Southeast Asia
+                        Sub-Saharan Africa
+
+Aggregates include all 195 countries and territories, including those with
+publish = "no". Some countries do not belong to a group in every grouping:
+
+- Taiwan, China (TWN) is not a WHO Member State (who_region = "Not a WHO
+  Member State"). It is included in the global, income-group and analysis-
+  region aggregates but not in any WHO region.
+- Cook Islands (COK) and Niue (NIU) have no 2025 World Bank income
+  classification (income_group = "Not classified"). They are included in the
+  global, WHO region and analysis-region aggregates but not in any income
+  group.
+
+
+CALCULATING CUSTOM REGIONS
+
+Estimates for a custom group of countries can be calculated as the
+population-weighted average of the country estimates:
+
+    estimate for group = sum(estimate x population) / sum(population)
+
+using the country rows for the same year, sex (and age) in the countries file.
+Include all countries in the group, whether publish is "yes" or "no".
+
+This gives the point estimate (mean_days or pct_Xdays) only. Uncertainty
+intervals for a custom group cannot be calculated from the _lwr and _upr
+columns; they require the posterior draws.
